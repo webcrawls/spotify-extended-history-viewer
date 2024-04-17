@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <h1>spotify-extended-streaming-history-viewer</h1>
+    <p>Sorts and displays your Spotify streaming history data.</p>
+    <p><i>(todo: add 'how to get data' guide)</i></p>
+    <hr />
+    <p>Select .json files containing your Spotify streaming history.</p>
+    <input type="file" id="file-selector" multiple>
+    <hr />
+    <article id="history">
+        <h2>Your Streaming History</h1>
+            <section class="year" id="year-template" aria-hidden="true">
+                <h2 class="year-title">XXXX</h2>
+                <ul class="year-songs">
+                    <li class="year-song">song name - song artist (song album)</li>
+                </ul>
+            </section>
+    </article>
+
+    <!-- application code -->
+    <script defer>
+        const fileSelector = document.getElementById('file-selector')
+        const yearTemplate = document.getElementById('year-template')
+        const historyNode = document.getElementById('history')
+
+
+        let songs = { 'examplesong': { year: 'XXXX', plays: 0 }}
+        let years = { 'XXXX': [{ name: 'example', artist: 'example', album: 'example' }] }
+
+        const render = () => {
+                console.log({songs})
+
+            for (const [year, songs] of Object.entries(years)) {
+                const yearNode = yearTemplate.cloneNode(true)
+
+                yearNode.querySelector('.year-title').innerText = year
+                
+                const yearSongs = yearNode.querySelector('.year-songs')
+                const yearSong = yearSongs.querySelector('.year-song')
+
+                for (const song of songs){
+                    const songNode = yearSong.cloneNode()
+                    songNode.innerText = `${song.name} - ${song.artist} (${song.album})`
+                    yearSongs.appendChild(songNode)
+                }
+
+                historyNode.appendChild(yearNode)
+            }
+        }
+
+        const parseSong = (song) => {
+            try {
+                const date = new Date(song.ts)
+                const year = date.getFullYear().toString()
+
+                const name = song['master_metadata_album_album_name']
+                const artist = song['master_metadata_album_artist_name']
+                const album = song['master_metadata_track_name']
+
+                const fqn = `${name},${artist},${album}`
+
+                if (fqn in songs) {
+                    const existing = songs[fqn]
+                    existing.plays = existing.plays + 1
+                    return
+                }
+
+                if (!(year in years)) {
+                    console.log("creating year "+year)
+                    years[year] = []
+                }
+
+                const songMeta = { name, artist, album }
+                const songData = { year, plays: 0 }
+
+                years[year] = [...years[year], songMeta]
+                songs[fqn] = songData
+            } catch (e) {
+                console.log({ error: e, song })
+            }
+        }
+
+        const parseFile = async (file) => {
+            const content = await file.text()
+            const data = JSON.parse(content)
+            for (const song of data) {
+                parseSong(song)
+            }
+        }
+
+        fileSelector.addEventListener('change', (event) => {
+            const fileList = event.target.files;
+            let promises = []
+            for (const file of fileList) {
+                promises = [...promises, parseFile(file)]
+            }
+            Promise.all(promises).then(() => render())
+        });
+
+        render()
+    </script>
+</body>
+<style>
+    body {
+        max-width: 80ch;
+        margin-inline: auto;
+    }
+</style>
+
+</html>
