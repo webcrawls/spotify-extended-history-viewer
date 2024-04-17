@@ -8,11 +8,13 @@
 </head>
 
 <body>
-    <h1>spotify-extended-streaming-history-viewer</h1>
+    <h1>spotify-streaming-history-viewer</h1>
     <p>Sorts and displays your Spotify streaming history data.</p>
-    <p><i>(todo: add 'how to get data' guide)</i></p>
+    <p><i>(Request a copy of your data from <a rel="external"
+                href="https://www.spotify.com/ca-en/account/privacy/">Spotify's privacy settings</a>!)</i></p>
     <hr />
-    <p>Select .json files containing your Spotify streaming history.</p>
+    <p>Select any .json files containing your Spotify streaming history.</p>
+    <p><i>(Depending on the size and quantity of JSON files, this operation may take a while to complete.)</i></p>
     <input type="file" id="file-selector" multiple>
     <hr />
     <article id="history">
@@ -31,22 +33,24 @@
         const yearTemplate = document.getElementById('year-template')
         const historyNode = document.getElementById('history')
 
-
-        let songs = { 'examplesong': { year: 'XXXX', plays: 0 }}
-        let years = { 'XXXX': [{ name: 'example', artist: 'example', album: 'example' }] }
+        let songs = { 'examplesong': { year: 'XXXX', plays: 0 } }
+        let years = {  }
 
         const render = () => {
-                console.log({songs})
+            console.log({ songs })
 
             for (const [year, songs] of Object.entries(years)) {
                 const yearNode = yearTemplate.cloneNode(true)
+                yearNode.id = null
 
                 yearNode.querySelector('.year-title').innerText = year
-                
+
                 const yearSongs = yearNode.querySelector('.year-songs')
                 const yearSong = yearSongs.querySelector('.year-song')
 
-                for (const song of songs){
+                yearSongs.innerHTML = ""
+
+                for (const song of songs) {
                     const songNode = yearSong.cloneNode()
                     songNode.innerText = `${song.name} - ${song.artist} (${song.album})`
                     yearSongs.appendChild(songNode)
@@ -74,7 +78,7 @@
                 }
 
                 if (!(year in years)) {
-                    console.log("creating year "+year)
+                    console.log("creating year " + year)
                     years[year] = []
                 }
 
@@ -112,6 +116,10 @@
     body {
         max-width: 80ch;
         margin-inline: auto;
+    }
+
+    #year-template {
+        display: none;
     }
 </style>
 
